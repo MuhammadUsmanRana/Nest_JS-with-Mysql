@@ -1,12 +1,9 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './typeorm/entities/User';
 import { UsersModule } from './users/users.module';
 import { Profile } from './typeorm/entities/Profile';
 import { Posts } from './typeorm/entities/Post';
-// import { UploadController } from './multer/backend.controller';
 
 @Module({
   imports: [
@@ -23,7 +20,7 @@ import { Posts } from './typeorm/entities/Post';
     UsersModule,
   ],  
 
-  controllers: [AppController],
-  providers: [AppService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
