@@ -1,36 +1,32 @@
-import { CreateUserProfileDto } from './../../dtos/CreateUserProfile.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { User } from 'src/typeorm/entities/User';
-import { CreateUserParams, CreateUserPostParams, updateUserParams } from 'src/utils/type';
 import { Repository } from 'typeorm';
 import { Profile } from 'src/typeorm/entities/Profile';
-import { Post } from 'src/typeorm/entities/Post';
+import { Posts } from 'src/typeorm/entities/Post';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User) private userRepository: Repository<User>,
     @InjectRepository(Profile) private profileRepository: Repository<Profile>,
-    @InjectRepository(Post) private postRepository: Repository<Post>,
-
-
+    @InjectRepository(Posts) private postRepository: Repository<Posts>,
   ) {}
   findUsers() {
     return this.userRepository.find({ relations: ['profile', 'posts'] });
   }
 
-  createUser(userDetails: CreateUserParams) {
+  createUser(createUser: User) {
     const newUser = this.userRepository.create({
-      ...userDetails,
+      ...createUser,
       createAt: new Date(),
     });
     return this.userRepository.save(newUser);
   }
 
-  updateUser(id: number, updateuserDetails: updateUserParams) {
-    return this.userRepository.update(id, updateuserDetails);
-  }  
+  updateUser(id: number, updateUser: User) {
+    return this.userRepository.update(id, updateUser);
+  }
 
   deleteUser(id: number) {
     return this.userRepository.delete({ id });
@@ -38,7 +34,7 @@ export class UsersService {
 
   async createUserProfile(
     id: number,
-    createUserProfilDto: CreateUserProfileDto,
+    profile: Profile,
   ) {
     const user = await this.userRepository.findOneBy({ id });
     if (!user)
@@ -47,25 +43,24 @@ export class UsersService {
         HttpStatus.BAD_REQUEST,
       );
 
-      const newProfile = this.profileRepository.create(createUserProfilDto)
-      const saveProfile = await this.profileRepository.save(newProfile)
-      user.profile = saveProfile
-      return this.userRepository.save(user)
+    const newProfile = this.profileRepository.create(profile);
+    const saveProfile = await this.profileRepository.save(newProfile);
+    user.profile = saveProfile;
+    return this.userRepository.save(user);
   }
 
-  async createUserPost(
-    id: number,
-    createUserPostDetails: CreateUserPostParams,
-  ) {
-    const user = await this.userRepository.findOneBy({ id });
+  async createUserPost(id: number, post: Posts ) {
+    const user = await this.userRepository.findOneBy({id});
     if (!user)
       throw new HttpException(
         'User not found. Cannot create Profile',
         HttpStatus.BAD_REQUEST,
-      ); 
-    const newPost = this.postRepository.create({
-      ...createUserPostDetails,
-      user,
-    });
+      );
+    const newPost = new Posts();
+      newPost.title = post.title;
+      newPost.description = post.description;
+      newPost.image = post.image;
+      newPost.user = user;
     return this.postRepository.save(newPost);
-  }}
+  }
+}

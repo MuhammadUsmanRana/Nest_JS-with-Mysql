@@ -5,7 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './typeorm/entities/User';
 import { UsersModule } from './users/users.module';
 import { Profile } from './typeorm/entities/Profile';
-import { Post } from './typeorm/entities/Post';
+import { Posts } from './typeorm/entities/Post';
+// import { UploadController } from './multer/backend.controller';
 
 @Module({
   imports: [
@@ -16,7 +17,7 @@ import { Post } from './typeorm/entities/Post';
       username: 'root',
       password: '',
       database: 'nestjs_mysql_tutorial',
-      entities: [User, Profile, Post],
+      entities: [User, Profile, Posts],
       synchronize: true,
     }),
     UsersModule,

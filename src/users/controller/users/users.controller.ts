@@ -1,4 +1,3 @@
-import { CreateUserProfileDto } from './../../dtos/CreateUserProfile.dto';
 import {
   Body,
   Controller,
@@ -6,53 +5,65 @@ import {
   Get,
   Param,
   ParseIntPipe,
-  Post,
   Put,
+  Post,
+  HttpException,
+  HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
-import { createUserDto } from 'src/users/dtos/CreateUser.dtos';
-import { updateUserDto } from 'src/users/dtos/updete.User.dto';
 import { UsersService } from 'src/users/services/users/users.service';
-import { CreateUserPostDto } from 'src/users/dtos/CreateUserPost.dto';
+import { Posts } from 'src/typeorm/entities/Post';
+import { User } from 'src/typeorm/entities/User';
+import { Profile } from 'src/typeorm/entities/Profile';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { UploadedFile } from '@nestjs/common';
+
 @Controller('users')
 export class UsersController {
-  constructor(private userServices: UsersService) {}
+  constructor(private readonly userServices: UsersService) {}
   @Get()
   getUsers() {
     return this.userServices.findUsers();
   }
 
   @Post()
-  createUser(@Body() creatUser: createUserDto) {
-    this.userServices.createUser(creatUser);
+  createUser(@Body() user: User) {
+    this.userServices.createUser(user);
   }
 
-  @Put(':id')
+  @Put('/:id')
   async updateUserById(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateUserDtos: updateUserDto,
-  ) {    
-    await this.userServices.updateUser(id, updateUserDtos);
+    @Body() user: User,
+  ) {
+    await this.userServices.updateUser(id, user);
   }
 
-  @Delete(':id')
+  @Delete('/:id')
   async deleteUserById(@Param('id', ParseIntPipe) id: number) {
     await this.userServices.deleteUser(id);
   }
 
-  @Post(':id/profiles')
+  @Post('/:id/profiles')
   createUserProfile(
     @Param('id', ParseIntPipe) id: number,
-    @Body() createUserProfileDto: CreateUserProfileDto,
+    @Body() profile: Profile,
   ) {
-    return this.userServices.createUserProfile(id,createUserProfileDto)
+    return this.userServices.createUserProfile(id, profile);
   }
 
-  @Post(':id/posts')
-  createUserPost(
+  @Post('/:id/posts')
+  @UseInterceptors(FileInterceptor('image'))
+  async createUserPost(
     @Param('id', ParseIntPipe) id: number,
-    @Body() createUserPostDto: CreateUserPostDto,
+    @Body() post: Posts,
+    @UploadedFile() file: any,
   ) {
-    return this.userServices.createUserPost(id, createUserPostDto);
+    if (!file) {
+      throw new HttpException('Image file is required', HttpStatus.BAD_REQUEST);
+    }
+    const imageData: string = file.originalname;
+    post.image = imageData;
+    return this.userServices.createUserPost(id, post);
   }
 }
-  
