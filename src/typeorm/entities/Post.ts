@@ -6,13 +6,13 @@ export class Posts {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   title: string;
 
   @Column()
   description: string;
 
-  @Column()
+  @Column({ unique: true })
   image: string;
 
   @ManyToOne(() => User, (user) => user.posts)

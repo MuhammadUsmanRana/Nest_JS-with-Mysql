@@ -5,10 +5,10 @@ export class Profile {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column({ unique: true })
   firstname: string;
 
-  @Column()  
+  @Column()
   lastname: string;
 
   @Column()

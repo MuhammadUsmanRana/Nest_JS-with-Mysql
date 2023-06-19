@@ -7,8 +7,6 @@ import {
   ParseIntPipe,
   Put,
   Post,
-  HttpException,
-  HttpStatus,
   UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from 'src/users/services/users/users.service';
@@ -21,14 +19,23 @@ import { UploadedFile } from '@nestjs/common';
 @Controller('users')
 export class UsersController {
   constructor(private readonly userServices: UsersService) {}
-  @Get()
-  getUsers() {
-    return this.userServices.findUsers();
+
+  @Post('/postuser')
+  async createUser(@Body() user: User) {
+    try {
+      return await this.userServices.createUser(user);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  @Post()
-  createUser(@Body() user: User) {
-    this.userServices.createUser(user);
+  @Get('/getall')
+  async getUsers() {
+    try {
+      return await this.userServices.findUsers();
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   @Put('/:id')
@@ -36,20 +43,20 @@ export class UsersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() user: User,
   ) {
-    await this.userServices.updateUser(id, user);
+    try {
+      return await this.userServices.updateUser(id, user);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   @Delete('/:id')
   async deleteUserById(@Param('id', ParseIntPipe) id: number) {
-    await this.userServices.deleteUser(id);
-  }
-
-  @Post('/:id/profiles')
-  createUserProfile(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() profile: Profile,
-  ) {
-    return this.userServices.createUserProfile(id, profile);
+    try {
+      return await this.userServices.deleteUserById(id);
+    } catch (error) {
+      console.error(error);
+    }
   }
 
   @Post('/:id/posts')
@@ -59,11 +66,68 @@ export class UsersController {
     @Body() post: Posts,
     @UploadedFile() file: any,
   ) {
-    if (!file) {
-      throw new HttpException('Image file is required', HttpStatus.BAD_REQUEST);
+    try {
+      if (!file) {
+        return 'image file is required';
+      }
+      const imageData: string = file.originalname;
+      post.image = imageData;
+      return await this.userServices.createUserPost(id, post);
+    } catch (error) {
+      console.error(error);
     }
-    const imageData: string = file.originalname;
-    post.image = imageData;
-    return this.userServices.createUserPost(id, post);
+  }
+
+  @Delete('/:id/postdelete')
+  async deleteUserPost(@Param('id', ParseIntPipe) id: number) {
+    try {
+      return await this.userServices.deleteUserPost(id);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  @Put('/:id/postupdate')
+  @UseInterceptors(FileInterceptor('image'))
+  async updateUserPostById(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() post: Posts,
+    @UploadedFile() file: any,
+  ) {
+    try {
+      if (file) {
+        const imageData: string = file.originalname;
+        post.image = imageData;
+        return await this.userServices.updateUserPostById(id, post);
+      } else {
+        return 'file not exist , please select any file';
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  @Post('/:id/profiles')
+  async createUserProfile(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() profile: Profile,
+  ) {
+    try {
+      return await this.userServices.createUserProfile(id, profile);
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  @Put('/:id/editprofile')
+  async editProfile(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() editprofiles: Profile,
+  ) {
+    try {
+      return await this.userServices.editProfile(id, editprofiles);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }
